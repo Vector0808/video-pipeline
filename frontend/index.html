@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Video Pipeline</title>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --emerald-950:#052e22;
+  --emerald-800:#065f46;
+  --emerald-600:#059669;
+  --emerald-500:#10b981;
+  --emerald-100:#d1fae5;
+  --emerald-50:#ecfdf5;
+  --white:#ffffff;
+  --ink:#0b1f17;
+  --muted:#5b7267;
+  --line:#dcefe6;
+  --radius:16px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  font-family:'Inter', Arial, sans-serif;
+  max-width:760px;
+  margin:auto;
+  padding:56px 24px 80px;
+  background:
+    radial-gradient(circle at 12% 0%, var(--emerald-50) 0%, var(--white) 45%),
+    var(--white);
+  color:var(--ink);
+}
+
+/* ---------- Header ---------- */
+
+.page-header{
+  margin-bottom:36px;
+}
+
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--emerald-600);
+  font-weight:500;
+  margin-bottom:14px;
+}
+
+.eyebrow::before{
+  content:"";
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--emerald-500);
+  box-shadow:0 0 0 4px var(--emerald-100);
+}
+
+h1{
+  font-family:'Space Grotesk', sans-serif;
+  font-size:34px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  margin:0 0 8px;
+  color:var(--emerald-950);
+}
+
+.page-header p{
+  margin:0;
+  color:var(--muted);
+  font-size:15px;
+}
+
+/* ---------- Pipeline rail ---------- */
+
+.pipeline{
+  position:relative;
+  padding-left:52px;
+}
+
+.pipeline::before{
+  content:"";
+  position:absolute;
+  left:19px;
+  top:22px;
+  bottom:22px;
+  width:2px;
+  background:linear-gradient(to bottom, var(--emerald-500), var(--line) 92%);
+}
+
+.card{
+  position:relative;
+  background:var(--white);
+  padding:26px 26px 28px;
+  border-radius:var(--radius);
+  margin-top:22px;
+  border:1px solid var(--line);
+  box-shadow:0 1px 2px rgba(5,46,34,.04), 0 8px 24px -12px rgba(5,46,34,.10);
+}
+
+.card::before{
+  content:attr(data-step);
+  position:absolute;
+  left:-52px;
+  top:22px;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:var(--emerald-950);
+  color:var(--emerald-50);
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:600;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 0 4px var(--white);
+}
+
+.card.is-done::before{
+  background:var(--emerald-500);
+}
+
+.card h3{
+  font-family:'Space Grotesk', sans-serif;
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:.01em;
+  margin:0 0 16px;
+  color:var(--emerald-950);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.card h3 .tag{
+  font-family:'JetBrains Mono', monospace;
+  font-size:10.5px;
+  font-weight:500;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--emerald-600);
+  background:var(--emerald-50);
+  border:1px solid var(--emerald-100);
+  padding:3px 8px;
+  border-radius:999px;
+}
+
+/* ---------- Upload ---------- */
+
+.dropzone{
+  border:1.5px dashed var(--emerald-100);
+  border-radius:12px;
+  padding:22px;
+  background:var(--emerald-50);
+  transition:border-color .15s ease, background .15s ease;
+}
+
+.dropzone:has(input:hover){
+  border-color:var(--emerald-500);
+}
+
+input[type="file"]{
+  width:100%;
+  font-family:'Inter', sans-serif;
+  font-size:14px;
+  color:var(--muted);
+}
+
+input[type="file"]::file-selector-button{
+  font-family:'Inter', sans-serif;
+  font-weight:600;
+  font-size:13px;
+  padding:9px 16px;
+  margin-right:14px;
+  border:none;
+  border-radius:8px;
+  background:var(--emerald-950);
+  color:var(--white);
+  cursor:pointer;
+  transition:background .15s ease;
+}
+
+input[type="file"]::file-selector-button:hover{
+  background:var(--emerald-800);
+}
+
+button{
+  padding:12px 22px;
+  cursor:pointer;
+  margin-top:18px;
+  font-family:'Inter', sans-serif;
+  font-weight:600;
+  font-size:14px;
+  color:var(--white);
+  background:linear-gradient(135deg, var(--emerald-600), var(--emerald-800));
+  border:none;
+  border-radius:10px;
+  letter-spacing:.01em;
+  box-shadow:0 6px 16px -6px rgba(6,95,70,.55);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+
+button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 20px -6px rgba(6,95,70,.6);
+}
+
+button:active{
+  transform:translateY(0);
+}
+
+/* ---------- Status ---------- */
+
+progress{
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  overflow:hidden;
+  border:none;
+  background:var(--emerald-50);
+  appearance:none;
+}
+
+progress::-webkit-progress-bar{
+  background:var(--emerald-50);
+  border-radius:999px;
+}
+
+progress::-webkit-progress-value{
+  background:linear-gradient(90deg, var(--emerald-500), var(--emerald-600));
+  border-radius:999px;
+  transition:width .3s ease;
+}
+
+progress::-moz-progress-bar{
+  background:linear-gradient(90deg, var(--emerald-500), var(--emerald-600));
+  border-radius:999px;
+}
+
+#status{
+  margin:12px 0 0;
+  font-size:13.5px;
+  color:var(--muted);
+  font-family:'JetBrains Mono', monospace;
+}
+
+/* ---------- Thumbnail ---------- */
+
+img{
+  margin-top:4px;
+  max-width:100%;
+  width:280px;
+  display:block;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--emerald-50);
+  min-height:60px;
+}
+
+/* ---------- Metadata ---------- */
+
+pre{
+  background:var(--emerald-950);
+  color:var(--emerald-100);
+  padding:18px;
+  overflow:auto;
+  border-radius:10px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:12.5px;
+  line-height:1.6;
+  margin:0;
+}
+
+/* ---------- Player ---------- */
+
+video{
+  width:100%;
+  margin-top:4px;
+  border-radius:10px;
+  background:var(--emerald-950);
+  display:block;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="page-header">
+  <div class="eyebrow">Video Pipeline</div>
+  <h1>Video Processing Pipeline</h1>
+  <p>Upload a video and watch it move through encoding, thumbnailing, and packaging for streaming.</p>
+</div>
+
+<div class="pipeline">
+
+<div class="card" data-step="1">
+
+<h3>Upload <span class="tag">Source</span></h3>
+
+<div class="dropzone">
+<input  type="file" id="video">
+</div>
+
+<br>
+
+<button onclick="uploadVideo()">Upload</button>
+
+</div>
+
+<div class="card" data-step="2">
+
+<h3>Status <span class="tag">Live</span></h3>
+
+<progress id="progress" value="0" max="100"></progress>
+
+<p id="status">Waiting...</p>
+
+</div>
+
+<div class="card" data-step="3">
+
+<h3>Thumbnail <span class="tag">Preview</span></h3>
+
+<img id="thumbnail">
+
+</div>
+
+<div class="card" data-step="4">
+
+<h3>Metadata <span class="tag">JSON</span></h3>
+
+<pre id="metadata"></pre>
+
+</div>
+
+<div class="card" data-step="5">
+
+<h3>HLS Player <span class="tag">Output</span></h3>
+
+<video id="player" controls></video>
+
+</div>
+
+</div>
+
+<script>
+
+const API="http://localhost:5000";
+
+let videoId=null;
+
+async function uploadVideo(){
+
+const fileInput=document.getElementById("video");
+const file=fileInput.files[0];
+
+if (!file) {
+    alert("Please select a video file first.");
+    return;
+}
+
+const form=new FormData();
+
+form.append("video",file);
+
+try {
+    const res=await fetch(API+"/videos",{
+    method:"POST",
+    body:form
+    });
+
+    const data=await res.json();
+
+    if (!res.ok || !data.success) {
+        alert("Upload failed: " + (data.message || "Unknown error"));
+        return;
+    }
+
+    videoId=data.videoId;
+    pollStatus();
+} catch (err) {
+    alert("Upload failed: " + err.message);
+}
+
+}
+
+function pollStatus(){
+
+const interval=setInterval(async()=>{
+
+try {
+    const res=await fetch(API+"/videos/"+videoId+"/status");
+    const data=await res.json();
+
+    if (!res.ok || !data.success) {
+        console.error("Failed to fetch status:", data.message);
+        clearInterval(interval);
+        document.getElementById("status").innerHTML = "Error: " + (data.message || "Unknown error");
+        return;
+    }
+
+    document.getElementById("progress").value=data.data.progress;
+
+    document.getElementById("status").innerHTML=
+
+    data.data.currentStep+" ("+data.data.progress+"%)";
+
+    if(data.data.status==="completed"){
+
+        clearInterval(interval);
+
+        loadMetadata();
+
+        loadThumbnail();
+
+        loadVideo();
+
+    }
+} catch (err) {
+    console.error("Polling error:", err);
+    clearInterval(interval);
+}
+
+},2000);
+
+}
+
+async function loadMetadata(){
+
+const res=await fetch(`${API}/outputs/${videoId}/metadata.json`)
+
+const text=await res.text();
+
+document.getElementById("metadata").textContent=text;
+
+}
+
+function loadThumbnail(){
+
+document.getElementById("thumbnail").src=
+
+`${API}/outputs/${videoId}/thumbnail.jpg`
+
+}
+
+function loadVideo(){
+
+const video=document.getElementById("player");
+
+const url = `${API}/outputs/${videoId}/hls/master.m3u8`;
+
+if(Hls.isSupported()){
+
+const hls=new Hls();
+
+hls.loadSource(url);
+
+hls.attachMedia(video);
+
+}else{
+
+video.src=url;
+
+}
+
+}
+
+</script>
+
+</body>
+
+</html>
