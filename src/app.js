@@ -30,6 +30,22 @@ app.get("/", (req, res) => {
 });
 
 app.use("/videos", routes)
+const multer = require("multer");
+
+app.use((err, req, res, next) => {
+
+    if (err instanceof multer.MulterError) {
+
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+    next(err);
+
+});
 app.use(errorMiddleware)
 
 module.exports = app;
